@@ -892,7 +892,7 @@
 
                 // Share the board
                 const boardId = new URLSearchParams(window.location.search).get('id');
-                const response = await fetch('${API_URL}/api/share-board', {
+                const response = await fetch(`${API_URL}/api/share-board`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
