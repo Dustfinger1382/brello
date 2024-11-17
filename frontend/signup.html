@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Brello - Sign Up</title>
+    <title>Brello - Get Organized</title>
+    <link rel="icon" type="image/png" href="/images/favicon.ico">
     <style>
         * {
             margin: 0;
@@ -202,6 +203,10 @@
     </div>
 
     <script>
+        const API_URL = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000' 
+        : 'https://brello.onrender.com';
+        
         document.getElementById('signupForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -210,7 +215,7 @@
             const errorMessage = document.getElementById('errorMessage');
 
             try {
-                const response = await fetch('http://localhost:3000/api/signup', {
+                const response = await fetch('`${API_URL}/api/signup', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

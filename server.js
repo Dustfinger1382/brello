@@ -9,7 +9,10 @@ const nodemailer = require('nodemailer');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: ['https://brello.onrender.com', 'http://localhost:3000'],
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.static('frontend'));
 app.get('/verify', (req, res) => {
@@ -66,7 +69,7 @@ app.post('/api/signup', async (req, res) => {
         // Create verification token
         const verificationToken = jwt.sign(
             { email },
-            'your-secret-key',  // In production, use a secure secret key from env variables
+            process.env.JWT_SECRET,  // In production, use a secure secret key from env variables
             { expiresIn: '24h' }
         );
 
@@ -125,7 +128,7 @@ app.get('/api/verify', async (req, res) => {
         const token = req.query.token;
         
         // Verify token
-        const decoded = jwt.verify(token, 'your-secret-key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
         // Find and update user
         const user = await User.findOne({ 

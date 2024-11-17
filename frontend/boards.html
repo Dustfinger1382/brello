@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Brello - Your Boards</title>
+    <title>Brello - Get Organized</title>
+    <link rel="icon" type="image/png" href="/images/favicon.ico">
     <style>
         * {
             margin: 0;
@@ -254,6 +255,19 @@
         .create-btn:hover {
             background-color: #696969;
         }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #172B4D;
+        }
+
+        .boards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -303,6 +317,10 @@
     </div>
 
     <script>
+        const API_URL = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000' 
+        : 'https://brello.onrender.com';
+        
         // Debug function to show all localStorage contents
         function debugLocalStorage() {
             console.log('==== DEBUG: ALL LOCALSTORAGE CONTENTS ====');
@@ -317,10 +335,10 @@
         // Call this function at key points
         document.addEventListener('DOMContentLoaded', debugLocalStorage);
         
-        /*function createNewBoard() {
+        function createNewBoard() {
             // To be implemented
             alert('Create new board feature coming soon!');
-        }*/
+        }
 
         // Check if user is logged in
         function checkAuth() {
@@ -384,36 +402,9 @@
 
         let selectedColor = '#4185F4'; // Default color
 
-        async function createNewBoard(title, color) {
-            try {
-                const userEmail = localStorage.getItem('userEmail');
-                const board = {
-                    id: Date.now().toString(),
-                    title: title,
-                    color: color,
-                    owner: userEmail,
-                    sharedWith: [],
-                    lists: []
-                };
-
-                const response = await fetch('/api/boards', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(board)
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to create board');
-                }
-
-                const savedBoard = await response.json();
-                return savedBoard;
-            } catch (error) {
-                console.error('Error creating board:', error);
-                throw error;
-            }
+        function createNewBoard() {
+            document.getElementById('createBoardModal').style.display = 'flex';
+            document.getElementById('boardTitle').focus();
         }
 
         function closeModal() {
@@ -498,59 +489,48 @@
         // Make sure loadBoards is called at the right times
         document.addEventListener('DOMContentLoaded', loadBoards);
 
-        async function saveBoard(boardData) {
-            try {
-                const response = await fetch('/api/boards', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(boardData)
-                });
-                return await response.json();
-            } catch (error) {
-                console.error('Error saving board:', error);
-                throw error;
-            }
-        }
-
         async function loadAllBoards() {
+            console.log('Loading boards...');
             const userEmail = localStorage.getItem('userEmail');
             
-            try {
-                // Load personal boards
-                const myBoardsResponse = await fetch(`/api/boards/${userEmail}`);
-                const myBoards = await myBoardsResponse.json();
-                
-                const myBoardsGrid = document.getElementById('myBoardsGrid');
-                myBoardsGrid.innerHTML = '';
-                
-                // Add create button
-                const addButton = document.createElement('button');
-                addButton.className = 'board-card create-board';
-                addButton.onclick = createNewBoard;
-                addButton.textContent = '+';
-                myBoardsGrid.appendChild(addButton);
+            // Get all boards from localStorage
+            const myBoards = JSON.parse(localStorage.getItem(userEmail) || '[]');
+            
+            // Load personal boards
+            const myBoardsGrid = document.getElementById('myBoardsGrid');
+            myBoardsGrid.innerHTML = ''; // Clear existing boards
+            
+            // Add the "+" button first
+            const addButton = document.createElement('button');
+            addButton.className = 'board-card create-board';
+            addButton.onclick = createNewBoard;
+            addButton.textContent = '+';
+            myBoardsGrid.appendChild(addButton);
 
-                // Add personal boards
+            if (myBoards.length > 0) {
                 myBoards.forEach(board => {
                     const boardCard = createBoardCard(board);
                     myBoardsGrid.insertBefore(boardCard, addButton);
                 });
+            }
 
-                // Load shared boards
-                const sharedBoardsResponse = await fetch(`/api/shared-boards/${userEmail}`);
-                const sharedBoards = await sharedBoardsResponse.json();
+            // Load shared boards
+            const sharedBoardsGrid = document.getElementById('sharedBoardsGrid');
+            sharedBoardsGrid.innerHTML = ''; // Clear existing shared boards
+            
+            try {
+                // Get shared boards from server
+                const response = await fetch(`${API_URL}/api/shared-boards/${userEmail}`);
+                const sharedBoards = await response.json();
                 
-                const sharedBoardsGrid = document.getElementById('sharedBoardsGrid');
-                sharedBoardsGrid.innerHTML = '';
-
-                sharedBoards.forEach(board => {
-                    const boardCard = createBoardCard(board);
-                    sharedBoardsGrid.appendChild(boardCard);
-                });
+                if (sharedBoards.length > 0) {
+                    sharedBoards.forEach(board => {
+                        const boardCard = createBoardCard(board);
+                        sharedBoardsGrid.appendChild(boardCard);
+                    });
+                }
             } catch (error) {
-                console.error('Error loading boards:', error);
+                console.error('Error loading shared boards:', error);
             }
         }
 
@@ -562,9 +542,6 @@
             boardCard.textContent = board.title;
             return boardCard;
         }
-
-        // Call when page loads
-        document.addEventListener('DOMContentLoaded', loadAllBoards);
 
         async function handleCreateBoard() {
             const title = document.getElementById('boardTitle').value.trim();
