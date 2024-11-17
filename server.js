@@ -85,7 +85,7 @@ app.post('/api/signup', async (req, res) => {
 
         // Send verification email
         // Inside your signup endpoint, update the email sending part
-        const verificationUrl = `http://localhost:3000/api/verify?token=${verificationToken}`;
+        const verificationUrl = `https://brello.onrender.com/api/verify?token=${verificationToken}`;
         const mailOptions = {
             from: process.env.EMAIL_USERNAME,
             to: email,
